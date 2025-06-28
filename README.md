@@ -47,16 +47,25 @@ HR departments often struggle to manually screen thousands of resumes for a limi
 ## 🗂 File Structure
 
 resume-screener/
+
 ├── resume_screener.py # Main Streamlit app
+
 ├── requirements.txt # Project dependencies
+
 ├── resume_model.pkl # Trained ML model (generated after training)
+
 ├── sample_resumes.csv # Optional: sample resume training data
-└── README.md # This file
+
+└── README.md # Descriptive file about the project
 
 ## 📦 Installation
-git clone https://github.com/your-username/resume-screener.git
+git clone 
+https://github.com/your-username/resume-screener.git
+
 cd resume-screener
+
 pip install -r requirements.txt
+
 streamlit run resume_screener.py
 
 📊 Model Training
@@ -92,6 +101,7 @@ Candidate shortlisting with customizable filters
 📩 Contact
 For suggestions, improvements, or demo requests:
 📧 gssingh6393@gmail.com
+
 🔗 https://www.linkedin.com/in/geetanjali--singh/
 
 📝 License
