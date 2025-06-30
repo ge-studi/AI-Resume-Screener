@@ -1,102 +1,88 @@
 # 🤖 AI Resume Screener
 
-An AI-based system to automatically classify resumes into suitable job categories using NLP techniques and machine learning models. Built with Streamlit, it enables HR teams to efficiently screen multiple resumes and get instant predictions, confidence scores, and top skill highlights.
+This project uses machine learning (TF-IDF and BERT-based models) to classify resumes into job categories such as Data Science, Web Development, DevOps, etc. It also extracts top skills and predicts job fit with confidence levels.
 
 ---
 
-## 📌 Problem Statement
+## 📌 Features
 
-HR departments often struggle to manually screen thousands of resumes for a limited number of job openings. This project automates the process by using ML and NLP to categorize resumes into job roles like Data Science, DevOps, Sales, etc.
-
----
-
-## 🚀 Features
-
-- Upload resumes in `.pdf`, `.docx`, or `.txt` formats
-- Classify resumes into job roles using:
-  - TF-IDF + Scikit-learn models (Logistic Regression, SVM, Naive Bayes, Random Forest)
-  - Pre-trained BERT embeddings (`all-MiniLM-L6-v2`)
-- Show prediction confidence score
-- Extract top relevant skills per role
-- Display resume preview
-- Visualize classification metrics (accuracy, precision, recall, confusion matrix)
+- Upload resumes in `.pdf`, `.docx`, or `.txt` format
+- Train models on custom or sample data
+- Choose between feature extraction methods: TF-IDF or BERT
+- Select ML models: Logistic Regression, Random Forest, or Naive Bayes
+- Evaluate performance using Accuracy, Confusion Matrix, and Classification Report
+- Predict job category and confidence for uploaded resumes
+- Visualize performance metrics directly in Streamlit
 
 ---
 
-## 🧠 How It Works
+## 🚀 How to Run
 
-1. **Upload resumes**
-2. **Preprocess text:** lowercasing, tokenization, stemming, stopword removal
-3. **Vectorize text:** TF-IDF or BERT embeddings
-4. **Train model:** Choose from Logistic Regression, SVM, Random Forest, or Naive Bayes
-5. **Predict role & extract skills**
+### 1. Clone this repository
 
----
+git clone https://github.com/ge-studi/AI-Resume-Screener
+cd AI-Resume-Screener
 
-## 🛠 Tech Stack
+2. Install dependencies
 
-- Python
-- Streamlit
-- NLTK, Scikit-learn
-- BERT via `sentence-transformers`
-- Seaborn, Matplotlib
-- PDF & DOCX parsing with `PyPDF2`, `docx2txt`
+pip install -r requirements.txt
+Make sure to install NLTK and download stopwords:
 
----
 
-## 🗂 File Structure
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+
+3. Start Streamlit
+streamlit run resume_screener.py
+🧠 Models Supported
+Feature Type	Model	Accuracy (Sample Data)
+TF-IDF	Logistic Regression	99.48%
+TF-IDF	Random Forest	99.48%
+TF-IDF	Naive Bayes	96.89%
+BERT	Logistic Regression	66.67%
+BERT	Random Forest	99.48%
+
+🖼 Architecture
+![Architecture](architecture.png)
+
+📂 Folder Structure
 
 resume-screener/
-├── resume_screener.py # Main Streamlit app
-├── requirements.txt # Project dependencies
-├── resume_model.pkl # Trained ML model (generated after training)
-├── sample_resumes.csv # Optional: sample resume training data
-└── README.md # This file
+│
+├── resume_screener.py        # Main Streamlit app
+├── requirements.txt          # Python dependencies
+├── README.md                 # Project documentation
+├── architecture.png          # Architecture diagram
+└── resume_model.pkl          # Saved model after training (auto-generated)
 
-## 📦 Installation
-git clone https://github.com/your-username/resume-screener.git
-cd resume-screener
-pip install -r requirements.txt
-streamlit run resume_screener.py
+🔖 Sample Job Categories
+Data Science
 
-📊 Model Training
-You can train the model using sample data or upload a CSV with two columns:
+Software Development
 
-resume_text: The raw resume content
+Web Development
 
-job_category: The target label (e.g., Data Science, Sales)
+DevOps
 
-🖥 Deployment Options
-✅ Option 1: Streamlit Cloud
-Push code to GitHub
+Digital Marketing
 
-Go to https://share.streamlit.io
+HR
 
-Deploy using resume_screener.py
+Finance
 
-✅ Option 2: Localhost
-streamlit run resume_screener.py
-📈 Sample Training Output
-Accuracy: >85% on sample resumes
+Sales
 
-View detailed classification report and confusion matrix in app
+Business Analyst
 
-🔮 Future Enhancements
-Bulk generation of synthetic resumes for demo/testing
+Project Management
 
-JD (Job Description) upload and candidate ranking system
+📃 License
+This project is licensed under the MIT License.
 
-Candidate shortlisting with customizable filters
-
-
-📩 Contact
-For suggestions, improvements, or demo requests:
-📧 gssingh6393@gmail.com
-🔗 https://www.linkedin.com/in/geetanjali--singh/
-
-📝 License
-MIT License
-
+🧑‍💻 Author
+Developed with ❤️ by Geetanjali 
+Feel free to fork, contribute, or raise issues.
 
 
 
