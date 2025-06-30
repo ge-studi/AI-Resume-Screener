@@ -18,29 +18,41 @@ This project uses machine learning (TF-IDF and BERT-based models) to classify re
 
 ## 🚀 How to Run
 
-### 1. Clone this repository
+Clone this repository
 
 git clone https://github.com/ge-studi/AI-Resume-Screener
+
 cd AI-Resume-Screener
 
-2. Install dependencies
+Install dependencies
 
 pip install -r requirements.txt
+
 Make sure to install NLTK and download stopwords:
 
 
 import nltk
+
 nltk.download('punkt')
+
 nltk.download('stopwords')
 
-3. Start Streamlit
+Start Streamlit
+
 streamlit run resume_screener.py
+
 🧠 Models Supported
+
 Feature Type	Model	Accuracy (Sample Data)
+
 TF-IDF	Logistic Regression	99.48%
+
 TF-IDF	Random Forest	99.48%
+
 TF-IDF	Naive Bayes	96.89%
+
 BERT	Logistic Regression	66.67%
+
 BERT	Random Forest	99.48%
 
 🖼 Architecture
@@ -49,39 +61,20 @@ BERT	Random Forest	99.48%
 📂 Folder Structure
 
 resume-screener/
-<<<<<<< HEAD
-│
+
 ├── resume_screener.py        # Main Streamlit app
+
 ├── requirements.txt          # Python dependencies
+
 ├── README.md                 # Project documentation
+
 ├── architecture.png          # Architecture diagram
+
 └── resume_model.pkl          # Saved model after training (auto-generated)
 
+
+
 🔖 Sample Job Categories
-Data Science
-=======
-
-├── resume_screener.py # Main Streamlit app
-
-├── requirements.txt # Project dependencies
-
-├── resume_model.pkl # Trained ML model (generated after training)
-
-├── sample_resumes.csv # Optional: sample resume training data
-
-└── README.md # Descriptive file about the project
-
-## 📦 Installation
-git clone 
-https://github.com/your-username/resume-screener.git
-
-cd resume-screener
-
-pip install -r requirements.txt
-
-streamlit run resume_screener.py
->>>>>>> dcd6e8cffc398f640a0e15ee533da71c2c0c8d83
-
 Software Development
 
 Web Development
@@ -100,27 +93,25 @@ Business Analyst
 
 Project Management
 
-<<<<<<< HEAD
-📃 License
-This project is licensed under the MIT License.
-=======
-JD (Job Description) upload and candidate ranking system
 
-Candidate shortlisting with customizable filters
+📃 License
+
+This project is licensed under the MIT License.
 
 
 📩 Contact
+
 For suggestions, improvements, or demo requests:
+
 📧 gssingh6393@gmail.com
 
 🔗 https://www.linkedin.com/in/geetanjali--singh/
 
-📝 License
-MIT License
->>>>>>> dcd6e8cffc398f640a0e15ee533da71c2c0c8d83
 
 🧑‍💻 Author
+
 Developed with ❤️ by Geetanjali 
+
 Feel free to fork, contribute, or raise issues.
 
 
