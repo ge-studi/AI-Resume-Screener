@@ -41,8 +41,9 @@ Start Streamlit
 
 streamlit run resume_screener.py
 
-🧠 Models Supported
 
+🧠 Models Supported
+---
 Feature Type	Model	Accuracy (Sample Data)
 
 TF-IDF	Logistic Regression	99.48%
@@ -55,11 +56,14 @@ BERT	Logistic Regression	66.67%
 
 BERT	Random Forest	99.48%
 
+
 🖼 Architecture
+---
 ![Architecture](architecture.png)
+---
 
 📂 Folder Structure
-
+---
 resume-screener/
 
 ├── resume_screener.py        # Main Streamlit app
@@ -75,6 +79,7 @@ resume-screener/
 
 
 🔖 Sample Job Categories
+---
 Software Development
 
 Web Development
@@ -95,12 +100,12 @@ Project Management
 
 
 📃 License
-
+---
 This project is licensed under the MIT License.
 
 
 📩 Contact
-
+---
 For suggestions, improvements, or demo requests:
 
 📧 gssingh6393@gmail.com
@@ -109,7 +114,7 @@ For suggestions, improvements, or demo requests:
 
 
 🧑‍💻 Author
-
+---
 Developed with ❤️ by Geetanjali 
 
 Feel free to fork, contribute, or raise issues.
