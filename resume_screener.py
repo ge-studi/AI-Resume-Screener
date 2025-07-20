@@ -20,7 +20,7 @@ from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 
 # Download required NLTK resources
-# nltk.download('punkt')
+nltk.download('punkt')
 nltk.download('stopwords')
 
 
