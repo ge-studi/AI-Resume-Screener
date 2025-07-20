@@ -4,6 +4,7 @@ import numpy as np
 import pickle
 import re
 import nltk
+import os
 import docx2txt
 import PyPDF2
 import seaborn as sns
@@ -19,11 +20,21 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 
-# Download required NLTK resources
-nltk.download('punkt')
-nltk.download('stopwords')
+# ============ SAFELY DOWNLOAD NLTK RESOURCES ============
+nltk_data_dir = os.path.join(os.path.expanduser("~"), "nltk_data")
+nltk.data.path.append(nltk_data_dir)
 
+try:
+    nltk.data.find("tokenizers/punkt")
+except LookupError:
+    nltk.download("punkt", download_dir=nltk_data_dir)
 
+try:
+    nltk.data.find("corpora/stopwords")
+except LookupError:
+    nltk.download("stopwords", download_dir=nltk_data_dir)
+
+# ============ CLASS =============
 class ResumeScreener:
     def __init__(self, model_type='tfidf'):
         self.model = None
