@@ -3,34 +3,28 @@ import pandas as pd
 import numpy as np
 import pickle
 import re
-import ssl
 import nltk
 import docx2txt
 import PyPDF2
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sentence_transformers import SentenceTransformer
-from sklearn.model_selection import cross_val_score
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 
-# Setup secure download for NLTK
-try:
-    _create_unverified_https_context = ssl._create_unverified_context
-    ssl._create_default_https_context = _create_unverified_https_context
-except:
-    pass
+# Download required NLTK resources
 nltk.download('punkt')
 nltk.download('punkt_tab')
 nltk.download('stopwords')
 
-# 🔧 Resume Screener Class
+
 class ResumeScreener:
     def __init__(self, model_type='tfidf'):
         self.model = None
@@ -69,32 +63,25 @@ class ResumeScreener:
             X = self.vectorizer.fit_transform(df['processed_text'])
 
         y = df['job_category']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-        # ⇨ Select model
         if model_choice == 'Logistic Regression':
             self.model = LogisticRegression(max_iter=1000)
         elif model_choice == 'Random Forest':
             self.model = RandomForestClassifier()
         elif model_choice == 'Naive Bayes':
             if self.model_type == 'bert':
-                st.error("❌ Naive Bayes only works with TF-IDF features.")
-                return None, None, None, None
+                st.error("Naive Bayes is only compatible with TF-IDF features.")
+                return None, None, None, None, None
             self.model = MultinomialNB()
 
-        # ✅ Cross-validation accuracy
-        scores = cross_val_score(self.model, X, y, cv=5, scoring='accuracy')
-        avg_accuracy = scores.mean()
-        std_accuracy = scores.std()
+        self.model.fit(X_train, y_train)
+        y_pred = self.model.predict(X_test)
+        acc = accuracy_score(y_test, y_pred)
+        report = classification_report(y_test, y_pred, output_dict=True)
+        cm = confusion_matrix(y_test, y_pred)
 
-        # 🔍 Train on full data for prediction
-        self.model.fit(X, y)
-
-        # Classification report and confusion matrix for display (optional)
-        y_pred = self.model.predict(X)
-        report = classification_report(y, y_pred, output_dict=True)
-        cm = confusion_matrix(y, y_pred)
-
-        return report, avg_accuracy, std_accuracy, cm
+        return report, acc, cm, y_test, y_pred
 
     def predict_resume(self, resume_text):
         text = self.preprocess_text(resume_text)
@@ -106,30 +93,30 @@ class ResumeScreener:
         confidence = self.model.predict_proba(vec).max() if hasattr(self.model, 'predict_proba') else 1.0
         return prediction, confidence
 
-# File Extraction
+
 def extract_text(file):
-    if file.name.endswith(".pdf"):
+    if file.name.endswith('.pdf'):
         reader = PyPDF2.PdfReader(file)
         return " ".join([page.extract_text() for page in reader.pages if page.extract_text()])
-    elif file.name.endswith(".docx"):
+    elif file.name.endswith('.docx'):
         return docx2txt.process(file)
-    elif file.name.endswith(".txt"):
+    elif file.name.endswith('.txt'):
         return file.read().decode("utf-8")
     return ""
 
-# 📊 Plotting function
+
 def plot_metrics(report, cm, labels):
-    st.subheader("📊 Classification Report (on full data)")
+    st.subheader("📊 Classification Report")
     st.dataframe(pd.DataFrame(report).transpose().round(2))
 
     st.subheader("📌 Confusion Matrix")
     fig, ax = plt.subplots()
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=labels, yticklabels=labels)
-    plt.ylabel("Actual")
-    plt.xlabel("Predicted")
+    plt.ylabel('Actual')
+    plt.xlabel('Predicted')
     st.pyplot(fig)
 
-# 🎯 Streamlit UI
+
 def main():
     st.set_page_config(page_title="AI Resume Screener", layout="wide")
     st.title("🤖 AI Resume Screener")
@@ -140,32 +127,28 @@ def main():
         st.subheader("📌 Train Model")
         feature_type = st.selectbox("Feature Type", ["tfidf", "bert"])
         model_choice = st.selectbox("Select Model", ["Logistic Regression", "Random Forest", "Naive Bayes"])
+
         file = st.file_uploader("Upload CSV with 'resume_text' and 'job_category'", type=['csv'])
         use_sample = st.checkbox("Use Sample Data")
 
         if st.button("Train Now"):
             screener = ResumeScreener(model_type=feature_type)
 
-            # Sample dataset
             if use_sample or file is None:
-                import random
                 data = []
                 for cat, skills in screener.job_categories.items():
-                    for _ in range(6):
-                        random.shuffle(skills)
-                        sample = f"Experienced in {', '.join(skills[:2])} and team projects"
-                        data.append((sample, cat))
+                    for i in range(3):
+                        data.append((f"Experienced in {', '.join(skills)}", cat))
                 df = pd.DataFrame(data, columns=["resume_text", "job_category"])
             else:
                 df = pd.read_csv(file)
                 if 'Resume' in df.columns and 'Category' in df.columns:
                     df.rename(columns={"Resume": "resume_text", "Category": "job_category"}, inplace=True)
 
-            report, acc, std, cm = screener.train_model(df, model_choice)
+            report, acc, cm, y_test, y_pred = screener.train_model(df, model_choice)
             if report:
-                st.success(f"✅ 5-Fold CV Accuracy: {acc:.2%} ± {std:.2%}")
-                plot_metrics(report, cm, sorted(df["job_category"].unique()))
-
+                st.success(f"🎉 Model Trained with Accuracy: {acc:.2%}")
+                plot_metrics(report, cm, sorted(df['job_category'].unique()))
                 with open("resume_model.pkl", "wb") as f:
                     pickle.dump(screener, f)
 
@@ -188,6 +171,6 @@ def main():
             st.markdown(f"**Confidence:** `{conf:.2%}`")
             st.text_area("Resume Preview", value=text[:1500], height=200)
 
-# 🚀 Run the app
+
 if __name__ == "__main__":
     main()
