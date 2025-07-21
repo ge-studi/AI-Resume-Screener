@@ -8,9 +8,10 @@ import docx2txt
 import PyPDF2
 import seaborn as sns
 import matplotlib.pyplot as plt
+import ssl
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_predict, StratifiedKFold
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -19,12 +20,17 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer
 
-# Download required NLTK resources
+# ↘ Setup NLTK Downloads
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+    ssl._create_default_https_context = _create_unverified_https_context
+except:
+    pass
+
 nltk.download('punkt')
-nltk.download('punkt_tab')
 nltk.download('stopwords')
 
-
+# 👩‍💻 Custom Resume Screener Class
 class ResumeScreener:
     def __init__(self, model_type='tfidf'):
         self.model = None
@@ -54,6 +60,9 @@ class ResumeScreener:
         return ' '.join(tokens)
 
     def train_model(self, df, model_choice):
+        if len(df) < 100:
+            st.warning("⚠️ Warning: Training on <100 examples increases risk of overfitting.")
+
         df['processed_text'] = df['resume_text'].apply(self.preprocess_text)
 
         if self.model_type == 'bert':
@@ -63,25 +72,32 @@ class ResumeScreener:
             X = self.vectorizer.fit_transform(df['processed_text'])
 
         y = df['job_category']
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+        # ⚙️ Model Selection
         if model_choice == 'Logistic Regression':
-            self.model = LogisticRegression(max_iter=1000)
+            self.model = LogisticRegression(C=0.5, max_iter=1000)
         elif model_choice == 'Random Forest':
-            self.model = RandomForestClassifier()
+            self.model = RandomForestClassifier(n_estimators=100)
         elif model_choice == 'Naive Bayes':
             if self.model_type == 'bert':
-                st.error("Naive Bayes is only compatible with TF-IDF features.")
+                st.error("❌ Naive Bayes is not compatible with BERT embeddings.")
                 return None, None, None, None, None
             self.model = MultinomialNB()
 
-        self.model.fit(X_train, y_train)
-        y_pred = self.model.predict(X_test)
-        acc = accuracy_score(y_test, y_pred)
-        report = classification_report(y_test, y_pred, output_dict=True)
-        cm = confusion_matrix(y_test, y_pred)
+        # ✅ Cross Validation Evaluation
+        st.info("📊 Performing 5-fold Cross Validation...")
+        skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+        y_pred = cross_val_predict(self.model, X, y, cv=skf)
 
-        return report, acc, cm, y_test, y_pred
+        report = classification_report(y, y_pred, output_dict=True)
+        f1 = report["macro avg"]["f1-score"]
+        acc = accuracy_score(y, y_pred)
+        cm = confusion_matrix(y, y_pred)
+
+        # Finally fit model on full data to save for inference
+        self.model.fit(X, y)
+
+        return report, acc, f1, cm, y_pred
 
     def predict_resume(self, resume_text):
         text = self.preprocess_text(resume_text)
@@ -105,9 +121,10 @@ def extract_text(file):
     return ""
 
 
-def plot_metrics(report, cm, labels):
+def plot_metrics(report, cm, labels, f1):
     st.subheader("📊 Classification Report")
     st.dataframe(pd.DataFrame(report).transpose().round(2))
+    st.success(f"🎯 Macro Avg F1 Score: {f1:.2%}")
 
     st.subheader("📌 Confusion Matrix")
     fig, ax = plt.subplots()
@@ -135,20 +152,24 @@ def main():
             screener = ResumeScreener(model_type=feature_type)
 
             if use_sample or file is None:
+                import random
                 data = []
                 for cat, skills in screener.job_categories.items():
-                    for i in range(3):
-                        data.append((f"Experienced in {', '.join(skills)}", cat))
+                    for i in range(8):  # More variety
+                        random.shuffle(skills)
+                        samples = ", ".join(skills[:2])
+                        text = f"Worked extensively with {samples} on multiple projects"
+                        data.append((text, cat))
                 df = pd.DataFrame(data, columns=["resume_text", "job_category"])
             else:
                 df = pd.read_csv(file)
                 if 'Resume' in df.columns and 'Category' in df.columns:
                     df.rename(columns={"Resume": "resume_text", "Category": "job_category"}, inplace=True)
 
-            report, acc, cm, y_test, y_pred = screener.train_model(df, model_choice)
+            report, acc, f1, cm, y_pred = screener.train_model(df, model_choice)
             if report:
-                st.success(f"🎉 Model Trained with Accuracy: {acc:.2%}")
-                plot_metrics(report, cm, sorted(df['job_category'].unique()))
+                st.success(f"🎉 Model Trained with CV Accuracy: {acc:.2%}")
+                plot_metrics(report, cm, sorted(df['job_category'].unique()), f1)
                 with open("resume_model.pkl", "wb") as f:
                     pickle.dump(screener, f)
 
