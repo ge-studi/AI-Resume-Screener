@@ -27,6 +27,7 @@ try:
 except:
     pass
 nltk.download('punkt')
+nltk.download('punkt_tab')
 nltk.download('stopwords')
 
 # 🔧 Resume Screener Class
