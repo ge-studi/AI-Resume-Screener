@@ -15,4 +15,5 @@ tqdm==4.66.1
 # Sentence-Transformers (semantic embeddings) - optional
 # NOTE: sentence-transformers requires torch. Install torch first (see instructions below),
 # then uncomment the next line if you want BERT features in the app.
-# sentence-transformers==2.7.0
+sentence-transformers==2.7.0
+
