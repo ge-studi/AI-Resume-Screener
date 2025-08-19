@@ -33,7 +33,7 @@ It includes:
 
 ## Quick start (local)
 
-1. Create a virtual environment (recommended)
+Create a virtual environment (recommended)
 
 python -m venv .venv #Windows
 
@@ -100,6 +100,7 @@ The dataset generator uses a fixed seed (configurable in the file) for determini
 The training pipeline removes exact and near-duplicates, and has optional downsampling to reduce class imbalance.
 
 If using bert option, embedding caching and CPU vs GPU differences may affect runtime.
+
 
 
 
