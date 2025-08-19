@@ -1,0 +1,18 @@
+# Core / TF-IDF pipeline (fast)
+streamlit==1.34.0
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.5.2
+nltk==3.9.1
+matplotlib==3.8.4
+seaborn==0.13.2
+docx2txt==0.8
+PyPDF2==3.0.1
+
+# Optional helpful utilities
+tqdm==4.66.1
+
+# Sentence-Transformers (semantic embeddings) - optional
+# NOTE: sentence-transformers requires torch. Install torch first (see instructions below),
+# then uncomment the next line if you want BERT features in the app.
+# sentence-transformers==2.7.0
