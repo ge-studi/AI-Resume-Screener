@@ -15,12 +15,19 @@ It includes:
 
 .
 ├── app.py # main Streamlit app (your Streamlit code)
+
 ├── generate_dataset.py # dataset generator (provided)
+
 ├── non_overfitting_resumes.csv # generated dataset (optional — large)
+
 ├── requirements.txt
+
 ├── README.md
+
 ├── .gitignore
+
 └──resume_model_state_complete_genai_fixed.pkl# (optional) saved model files go here
+
 
 ---
 
@@ -88,3 +95,4 @@ If using bert option, embedding caching and CPU vs GPU differences may affect ru
 ```
 
 ```
+
