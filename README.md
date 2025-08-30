@@ -1,107 +1,103 @@
 # AI Resume Screener
 
-**AI Resume Screener** is a Streamlit app + training pipeline for classifying resumes into AI-related job categories (Data Scientist, ML Engineer, Data Engineer, AI Researcher, Generative AI).  
-It includes:
+AI Resume Screener is a Streamlit web app that classifies resumes into AI-related job categories (Data Scientist, ML Engineer, Data Engineer, AI Researcher, Generative AI).
 
-- Robust CSV/XLSX loader with encoding/delimiter detection
-- Text extraction for PDF / DOCX / TXT resumes
-- TF-IDF and optional BERT-based feature pipelines
-- Hidden rule-based keyword ensemble to boost detection of Generative AI
-- A synthetic dataset generator `generate_non_overfitting_dataset.py` that produces a dataset designed to avoid trivial keyword leakage (so models don't trivially reach 100% accuracy)
+It works by:
 
----
+Extracting text from PDF resumes (using PyMuPDF)
 
-## Repo layout (suggested)
+Running predictions with a pre-trained ML pipeline (loaded from data/models/ensemble_resume_model.pkl)
 
+Showing predicted category, confidence score, ATS pass/fail, and tailored improvement suggestions
 
-├── app.py # main Streamlit app (your Streamlit code)
+Exporting results to CSV for bulk screening
 
-├── generate_dataset.py # dataset generator (provided)
+# Features
 
-├── non_overfitting_resumes.csv # generated dataset (optional — large)
+📄 Upload multiple PDF resumes
+
+🔍 Predict job category with confidence scores
+
+✅ ATS-style pass/fail check (based on confidence ≥ 80%)
+
+💡 Improvement suggestions for each role (e.g., skills to add for ML Engineer, Data Scientist, etc.)
+
+⚡ Detects Generative AI resumes via keywords (LLM, generative, prompt)
+
+⬇️ Download results as a CSV report
+
+# Repo Layout
+
+├── app.py                        # Main Streamlit app
+
+├── data/
+│   └── models/
+│       └── ensemble_resume_model.pkl   # Pre-trained ML pipeline (required)
 
 ├── requirements.txt
 
 ├── README.md
 
-├── .gitignore
+└── .gitignore
 
-├── resume_model_state_complete_genai_fixed.pkl# (optional) saved model files go here
+# Quick Start (Local)
 
+Create a virtual environment
+   
+python -m venv .venv   # Windows
 
----
+.venv\Scripts\activate # Windows PowerShell
 
-## Quick start (local)
+# OR on macOS/Linux
 
-Create a virtual environment (recommended)
+source .venv/bin/activate
 
-python -m venv .venv #Windows
-
-source .venv/bin/activate # macOS / Linux
-
-# .venv\Scripts\activate # Windows PowerShell
-
-Install requirements
-
+Install dependencies
+   
 pip install -r requirements.txt
 
-Optional (BERT / semantic embeddings)
-
-If you want the BERT / sentence-transformers option for semantic features, first install the appropriate torch package for your platform (see https://pytorch.org/get-started/locally/), then:
-
-pip install sentence-transformers
-
-Note: sentence-transformers requires torch. Installing sentence-transformers without torch will not enable the BERT option.
-
-Generate the synthetic dataset (optional)
-
-python generate_non_overfitting_dataset.py
-
-# Produces non_overfitting_resumes.csv (by default)
-
-Run the Streamlit app
+Run the app
 
 streamlit run app.py
 
-Then open the URL displayed by Streamlit (usually http://localhost:8501).
 
-How to use the app
+Then open http://localhost:8501 in your browser.
 
-Load Dataset
+# How to Use
 
-Upload a CSV/XLSX/ZIP with a column containing resume text and a label column with job category. The loader attempts to auto-detect encoding and delimiter.
-
-Train Model
-
-Choose feature type tfidf (fast) or bert (semantic, optional).
-
-Choose classifier (Logistic Regression is default).
-
-Set CV folds, remove duplicates, and other options then click Train now.
-
-The app enforces a minimum test accuracy before saving the model (prevents accidental overwriting with weak models).
-
-Screen Resume
-
-Upload a PDF/DOCX/TXT resume to classify using the saved model.
-
-The app shows top predictions and a rule-based keyword ensemble for Generative AI.
-
-Files of interest / configuration
-
-MODEL_STATE_PATH in the app controls where the trained model is saved (default: resume_model_state_complete_genai_fixed.pkl).
-
-generate_dataset.py — creates a balanced synthetic dataset designed to make models not trivially overfit on single tokens.
-
-Reproducibility notes
-
-The dataset generator uses a fixed seed (configurable in the file) for deterministic output.
-
-The training pipeline removes exact and near-duplicates, and has optional downsampling to reduce class imbalance.
-
-If using bert option, embedding caching and CPU vs GPU differences may affect runtime.
+Upload PDF resumes (one or many).
 
 
+The app will show a table with:
 
 
+Filename
 
+Predicted category
+
+Confidence score
+
+ATS status (Good / Failed to parse)
+
+
+Suggestions for improvement
+
+Download results as CSV for record-keeping.
+
+# Model Notes
+
+
+The model is loaded from data/models/ensemble_resume_model.pkl
+
+It should contain a scikit-learn pipeline with predict (and optionally predict_proba) methods.
+
+For classifiers without predict_proba (e.g., LinearSVC), a default confidence proxy is used.
+
+
+# ⚡ Future extensions:
+
+Add DOCX/TXT parsing
+
+Re-train pipeline with fresh datasets
+
+Integrate BERT embeddings for semantic features
