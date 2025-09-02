@@ -180,7 +180,7 @@ if uploaded_files:
     def render_confidence_bar(score):
         color = "#22c55e" if score >= 80 else "#facc15" if score >= 50 else "#ef4444"
         return f"<div style='background-color:#e5e7eb; width:100%; border-radius:5px; height:20px;'>\
-                <div style='width:{score}%; background-color:{color}; height:100%; border-radius:5px; text-align:center; color:black; font-size:12px;'>{score}%</div></div>"
+                <div style='width:{score}%; background-color:{color}; height:20px; border-radius:5px; text-align:center; color:black; font-size:12px;'>{score}%</div></div>"
 
     df_display = df_results.copy()
     df_display["Confidence"] = df_display["Confidence"].apply(render_confidence_bar)
@@ -214,3 +214,4 @@ if uploaded_files:
         file_name="resume_screener_results.csv",
         mime="text/csv"
     )
+
