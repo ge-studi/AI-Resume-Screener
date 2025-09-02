@@ -2,40 +2,22 @@ import streamlit as st
 import pandas as pd
 import pickle
 import fitz  # PyMuPDF
-import base64
 import matplotlib.pyplot as plt
+import base64
 
 st.set_page_config(page_title="AI Resume Screener", layout="wide")
 
 # -------------------------
-# Theme Toggle
+# Dark/Light Mode
 # -------------------------
 dark_mode = st.sidebar.checkbox("Dark Mode", value=False)
-
 if dark_mode:
-    st.markdown(
-        """
+    st.markdown("""
         <style>
         .reportview-container {background-color: #0E1117; color: #F5F5F5;}
-        .stButton>button, .stDownloadButton>button {border-radius: 5px;}
-        .stButton>button {background-color: #1F2937; color: #F5F5F5;}
-        .stDownloadButton>button {background-color: #2563EB; color: white;}
+        .stDataFrame {background-color:#1E1E2E;}
         </style>
-        """,
-        unsafe_allow_html=True,
-    )
-else:
-    st.markdown(
-        """
-        <style>
-        .reportview-container {background-color: #FFFFFF; color: #000000;}
-        .stButton>button, .stDownloadButton>button {border-radius: 5px;}
-        .stButton>button {background-color: #E5E7EB; color: #000000;}
-        .stDownloadButton>button {background-color: #2563EB; color: white;}
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
+    """, unsafe_allow_html=True)
 
 # -------------------------
 # PDF to text
@@ -65,7 +47,7 @@ def suggest_improvements(pred_label):
     return " ".join(SUGGESTIONS.get(pred_label, []))
 
 # -------------------------
-# Load trained pipeline
+# Load model
 # -------------------------
 @st.cache_resource
 def load_model(path="data/models/ensemble_resume_model.pkl"):
@@ -76,20 +58,15 @@ def load_model(path="data/models/ensemble_resume_model.pkl"):
 model = load_model()
 
 # -------------------------
-# Streamlit UI
+# Upload resumes
 # -------------------------
 st.title("AI Resume Screener")
 st.markdown("Upload resumes in **PDF format**. The screener predicts job category, confidence score, and suggests improvements.")
 
-uploaded_files = st.file_uploader(
-    "Upload PDF Resumes",
-    type="pdf",
-    accept_multiple_files=True
-)
+uploaded_files = st.file_uploader("Upload PDF Resumes", type="pdf", accept_multiple_files=True)
 
 if uploaded_files:
     st.info(f"Processing {len(uploaded_files)} resumes...")
-
     results = []
 
     for pdf_file in uploaded_files:
@@ -134,7 +111,7 @@ if uploaded_files:
     df_results = pd.DataFrame(results)
 
     # -------------------------
-    # Dashboard Summary
+    # Summary Metrics
     # -------------------------
     total_resumes = len(df_results)
     good_count = len(df_results[df_results["Status"]=="Good"])
@@ -143,31 +120,30 @@ if uploaded_files:
     avg_confidence = round(df_results["Confidence Score (%)"].mean(),2)
 
     st.markdown("### Summary Dashboard")
-    st.markdown(f"""
-        - **Total Resumes:** {total_resumes}  
-        - **Good:** {good_count}  
-        - **Medium:** {medium_count}  
-        - **Low:** {low_count}  
-        - **Average Confidence Score:** {avg_confidence}%
-    """)
+    col1, col2, col3 = st.columns([1,1,2])
+    with col1:
+        st.metric("Total Resumes", total_resumes)
+        st.metric("Average Confidence", f"{avg_confidence}%")
+    with col2:
+        st.metric("Good", good_count)
+        st.metric("Medium", medium_count)
+        st.metric("Low", low_count)
+    with col3:
+        fig1, ax1 = plt.subplots(figsize=(4,3))
+        ax1.pie([good_count, medium_count, low_count],
+                labels=["Good","Medium","Low"],
+                colors=["#22c55e","#facc15","#ef4444"],
+                autopct="%1.1f%%", startangle=90)
+        ax1.axis("equal")
+        st.pyplot(fig1)
 
     # -------------------------
-    # Pie chart for Good/Medium/Low
-    # -------------------------
-    fig1, ax1 = plt.subplots()
-    ax1.pie([good_count, medium_count, low_count],
-            labels=["Good", "Medium", "Low"],
-            colors=["#22c55e", "#facc15", "#ef4444"],
-            autopct="%1.1f%%", startangle=90)
-    ax1.axis("equal")
-    st.pyplot(fig1)
-
-    # -------------------------
-    # Bar chart for Predicted Categories
+    # Resumes per Category Bar Chart
     # -------------------------
     category_counts = df_results["Predicted Category"].value_counts()
-    fig2, ax2 = plt.subplots()
-    ax2.bar(category_counts.index, category_counts.values, color="#2563EB")
+    fig2, ax2 = plt.subplots(figsize=(6,3))
+    colors = plt.cm.tab20.colors[:len(category_counts)]
+    ax2.bar(category_counts.index, category_counts.values, color=colors)
     ax2.set_ylabel("Number of Resumes")
     ax2.set_xlabel("Job Category")
     ax2.set_title("Resumes per Job Category")
@@ -175,50 +151,39 @@ if uploaded_files:
     st.pyplot(fig2)
 
     # -------------------------
-    # Scrollable table with sticky headers & confidence bars
+    # Inline Confidence Bars in Table
     # -------------------------
+    def render_confidence_bar(score):
+        color = "#22c55e" if score >= 80 else "#facc15" if score >= 50 else "#ef4444"
+        return f"<div style='background-color:#e5e7eb; width:100%; border-radius:5px; height:20px;'>\
+                <div style='width:{score}%; background-color:{color}; height:100%; border-radius:5px; text-align:center; color:black; font-size:12px;'>{score}%</div></div>"
+
+    df_display = df_results.copy()
+    df_display["Confidence"] = df_display["Confidence Score (%)"].apply(render_confidence_bar)
+    df_display = df_display.drop(columns=["Confidence Score (%)","PDF Bytes"])
+
     st.markdown("### Resume Screening Results")
-    st.markdown(
-        """
-        <style>
-        .scrollable-table {max-height: 400px; overflow-y: auto;}
-        .scrollable-table th {position: sticky; top: 0; background-color: #2563EB; color: white;}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    def generate_html_table(df):
+        html = "<table style='width:100%; border-collapse: collapse;'>"
+        html += "<tr>"
+        for col in df.columns:
+            html += f"<th style='border:1px solid #ccc; padding:5px; background-color:#2563EB; color:white;'>{col}</th>"
+        html += "</tr>"
+        for _, row in df.iterrows():
+            bg_color = "#d1fae5" if row.Status=="Good" else "#fef3c7" if row.Status=="Medium" else "#fee2e2"
+            html += "<tr>"
+            for col in df.columns:
+                cell = row[col]
+                html += f"<td style='border:1px solid #ccc; padding:5px; background-color:{bg_color}; vertical-align:middle;'>{cell}</td>"
+            html += "</tr>"
+        html += "</table>"
+        return html
 
-    for idx, row in df_results.iterrows():
-        if row["Status"] == "Good":
-            row_color = "#d1fae5"
-        elif row["Status"] == "Medium":
-            row_color = "#fef3c7"
-        else:
-            row_color = "#fee2e2"
+    st.markdown(generate_html_table(df_display), unsafe_allow_html=True)
 
-        cols = st.columns([2,2,3,1,3,1,1])
-        cols[0].markdown(f"<div style='background-color:{row_color}; padding:5px'>{row['Filename']}</div>", unsafe_allow_html=True)
-        cols[1].markdown(f"<div style='background-color:{row_color}; padding:5px'>{row['Predicted Category']}</div>", unsafe_allow_html=True)
-
-        bar_color = "#22c55e" if row["Status"]=="Good" else "#facc15" if row["Status"]=="Medium" else "#ef4444"
-        cols[2].markdown(f"""
-            <div style='background-color:#e5e7eb; width:100%; border-radius:5px; height:20px;'>
-                <div style='width:{row["Confidence Score (%)"]}%; background-color:{bar_color}; height:100%; border-radius:5px; text-align:center; color:black;'>{row["Confidence Score (%)"]}%</div>
-            </div>
-        """, unsafe_allow_html=True)
-
-        cols[3].markdown(f"<div style='background-color:{row_color}; padding:5px'>{row['Status']}</div>", unsafe_allow_html=True)
-        cols[4].markdown(f"<div style='background-color:{row_color}; padding:5px'>{row['Suggestions']}</div>", unsafe_allow_html=True)
-
-        b64_pdf = base64.b64encode(row["PDF Bytes"]).decode()
-        href = f'<a href="data:application/pdf;base64,{b64_pdf}" download="{row["Filename"]}">Download PDF</a>'
-        cols[5].markdown(href, unsafe_allow_html=True)
-
-        copy_button = f"""
-        <button onclick="navigator.clipboard.writeText('{row["Suggestions"].replace("'", "\\'")}')">Copy Suggestions</button>
-        """
-        cols[6].markdown(copy_button, unsafe_allow_html=True)
-
+    # -------------------------
+    # Download CSV
+    # -------------------------
     st.download_button(
         label="Download Results as CSV",
         data=df_results.drop(columns=["PDF Bytes"]).to_csv(index=False).encode("utf-8"),
