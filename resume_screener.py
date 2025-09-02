@@ -2,21 +2,34 @@ import streamlit as st
 import pandas as pd
 import pickle
 import fitz  # PyMuPDF
-import matplotlib.pyplot as plt
-import base64
+import numpy as np
+import plotly.express as px
 
+# -------------------------
+# Page config
+# -------------------------
 st.set_page_config(page_title="AI Resume Screener", layout="wide")
 
 # -------------------------
-# Dark/Light Mode
+# Dark/Light Mode Toggle
 # -------------------------
-dark_mode = st.sidebar.checkbox("Dark Mode", value=False)
-if dark_mode:
+mode = st.sidebar.radio("Select Theme", ["Light", "Dark"])
+
+if mode == "Dark":
     st.markdown("""
-        <style>
-        .reportview-container {background-color: #0E1117; color: #F5F5F5;}
-        .stDataFrame {background-color:#1E1E2E;}
-        </style>
+    <style>
+    body {background-color: #0f172a; color: #f8fafc;}
+    .stButton>button {background-color: #2563eb; color: white;}
+    .stDownloadButton>button {background-color: #22c55e; color: white;}
+    table th, table td {color: #f8fafc !important;}
+    </style>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+    <style>
+    body {background-color: #ffffff; color: #000000;}
+    table th, table td {color: #000000 !important;}
+    </style>
     """, unsafe_allow_html=True)
 
 # -------------------------
@@ -102,9 +115,9 @@ if uploaded_files:
         results.append({
             "Filename": pdf_file.name,
             "Predicted Category": pred_label,
-            "Confidence Score (%)": round(confidence, 2),
             "Status": status,
             "Suggestions": suggestions,
+            "Confidence": round(confidence,2),
             "PDF Bytes": pdf_file.getvalue()
         })
 
@@ -117,7 +130,7 @@ if uploaded_files:
     good_count = len(df_results[df_results["Status"]=="Good"])
     medium_count = len(df_results[df_results["Status"]=="Medium"])
     low_count = len(df_results[df_results["Status"]=="Low"])
-    avg_confidence = round(df_results["Confidence Score (%)"].mean(),2)
+    avg_confidence = round(df_results["Confidence"].mean(),2)
 
     st.markdown("### Summary Dashboard")
     col1, col2, col3 = st.columns([1,1,2])
@@ -128,30 +141,41 @@ if uploaded_files:
         st.metric("Good", good_count)
         st.metric("Medium", medium_count)
         st.metric("Low", low_count)
-    with col3:
-        fig1, ax1 = plt.subplots(figsize=(4,3))
-        ax1.pie([good_count, medium_count, low_count],
-                labels=["Good","Medium","Low"],
-                colors=["#22c55e","#facc15","#ef4444"],
-                autopct="%1.1f%%", startangle=90)
-        ax1.axis("equal")
-        st.pyplot(fig1)
 
     # -------------------------
-    # Resumes per Category Bar Chart
+    # Interactive Pie Chart
+    # -------------------------
+    status_counts = df_results['Status'].value_counts().reindex(['Good','Medium','Low'], fill_value=0)
+    fig_pie = px.pie(
+        names=status_counts.index,
+        values=status_counts.values,
+        color=status_counts.index,
+        color_discrete_map={'Good':'#22c55e', 'Medium':'#facc15', 'Low':'#ef4444'},
+        title="Resume Status Distribution",
+        hole=0.4
+    )
+    fig_pie.update_traces(textposition='inside', textinfo='percent+label', hoverinfo='label+value+percent')
+    st.plotly_chart(fig_pie, use_container_width=True)
+
+    # -------------------------
+    # Interactive Bar Chart
     # -------------------------
     category_counts = df_results["Predicted Category"].value_counts()
-    fig2, ax2 = plt.subplots(figsize=(6,3))
-    colors = plt.cm.tab20.colors[:len(category_counts)]
-    ax2.bar(category_counts.index, category_counts.values, color=colors)
-    ax2.set_ylabel("Number of Resumes")
-    ax2.set_xlabel("Job Category")
-    ax2.set_title("Resumes per Job Category")
-    plt.xticks(rotation=45)
-    st.pyplot(fig2)
+    fig_bar = px.bar(
+        x=category_counts.index,
+        y=category_counts.values,
+        text=category_counts.values,
+        color=category_counts.values,
+        color_continuous_scale='Viridis',
+        labels={'x':'Job Category','y':'Number of Resumes'},
+        title="Resumes per Job Category"
+    )
+    fig_bar.update_traces(textposition='outside')
+    fig_bar.update_layout(xaxis_tickangle=-45)
+    st.plotly_chart(fig_bar, use_container_width=True)
 
     # -------------------------
-    # Inline Confidence Bars in Table
+    # Table with Confidence Bars (Scrollable)
     # -------------------------
     def render_confidence_bar(score):
         color = "#22c55e" if score >= 80 else "#facc15" if score >= 50 else "#ef4444"
@@ -159,27 +183,27 @@ if uploaded_files:
                 <div style='width:{score}%; background-color:{color}; height:100%; border-radius:5px; text-align:center; color:black; font-size:12px;'>{score}%</div></div>"
 
     df_display = df_results.copy()
-    df_display["Confidence"] = df_display["Confidence Score (%)"].apply(render_confidence_bar)
-    df_display = df_display.drop(columns=["Confidence Score (%)","PDF Bytes"])
+    df_display["Confidence"] = df_display["Confidence"].apply(render_confidence_bar)
+    df_display = df_display.drop(columns=["PDF Bytes"])
 
-    st.markdown("### Resume Screening Results")
-    def generate_html_table(df):
-        html = "<table style='width:100%; border-collapse: collapse;'>"
+    def generate_scrollable_table(df):
+        html = "<div style='overflow-x:auto; max-height:500px;'>"
+        html += "<table style='width:100%; border-collapse: collapse;'>"
         html += "<tr>"
         for col in df.columns:
-            html += f"<th style='border:1px solid #ccc; padding:5px; background-color:#2563EB; color:white;'>{col}</th>"
+            html += f"<th style='border:1px solid #ccc; padding:5px; background-color:#2563EB; color:white; min-width:140px;'>{col}</th>"
         html += "</tr>"
         for _, row in df.iterrows():
             bg_color = "#d1fae5" if row.Status=="Good" else "#fef3c7" if row.Status=="Medium" else "#fee2e2"
             html += "<tr>"
             for col in df.columns:
-                cell = row[col]
-                html += f"<td style='border:1px solid #ccc; padding:5px; background-color:{bg_color}; vertical-align:middle;'>{cell}</td>"
+                html += f"<td style='border:1px solid #ccc; padding:5px; background-color:{bg_color}; vertical-align:middle; min-width:140px;'>{row[col]}</td>"
             html += "</tr>"
-        html += "</table>"
+        html += "</table></div>"
         return html
 
-    st.markdown(generate_html_table(df_display), unsafe_allow_html=True)
+    st.markdown("### Resume Screening Results")
+    st.markdown(generate_scrollable_table(df_display), unsafe_allow_html=True)
 
     # -------------------------
     # Download CSV
