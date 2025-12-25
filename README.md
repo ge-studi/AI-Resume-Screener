@@ -1,6 +1,6 @@
 # AI-Powered Resume Screening & Candidate Ranking System
 
-🔗 **Live Demo:**
+🔗 Live Demo: https://ai-resume-screener-pt4gpcl5mwxi54ambclbve.streamlit.app/
 
 ---
 
@@ -54,7 +54,9 @@ The system helps recruiters quickly identify the most relevant candidates, signi
 ---
 
 ## 🖥 Application Preview
-![Resume Screener App](screenshots/app_demo.png)
+![Resume Screener App](screenshots/app_demo1.png)
+![Resume Screener App](screenshots/app_demo2.png)
+![Resume Screener App](screenshots/app_demo3.png)
 
 ---
 
@@ -62,3 +64,4 @@ The system helps recruiters quickly identify the most relevant candidates, signi
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
+
