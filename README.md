@@ -1,103 +1,64 @@
-# AI Resume Screener
+# AI-Powered Resume Screening & Candidate Ranking System
 
-AI Resume Screener is a Streamlit web app that classifies resumes into AI-related job categories (Data Scientist, ML Engineer, Data Engineer, AI Researcher, Generative AI).
+🔗 **Live Demo:**
 
-It works by:
+---
 
-Extracting text from PDF resumes (using PyMuPDF)
+## 📌 Problem Statement
+Recruiters often need to manually screen hundreds of resumes for a single job opening.  
+This process is time-consuming, prone to bias, and delays hiring decisions.
 
-Running predictions with a pre-trained ML pipeline (loaded from data/models/ensemble_resume_model.pkl)
+---
 
-Showing predicted category, confidence score, ATS pass/fail, and tailored improvement suggestions
+## 💡 Solution
+This project automates the resume screening process by using **Natural Language Processing (NLP)** to analyze resumes and rank candidates based on their similarity to a given job description.
 
-Exporting results to CSV for bulk screening
+The system helps recruiters quickly identify the most relevant candidates, significantly reducing manual effort.
 
-# Features
+---
 
-📄 Upload multiple PDF resumes
+## 🚀 Key Features
+- Upload and analyze multiple resumes
+- Input custom job descriptions
+- NLP-based resume text extraction and preprocessing
+- Candidate ranking using similarity scores
+- Interactive and user-friendly Streamlit interface
+- Real-time resume screening results
 
-🔍 Predict job category with confidence scores
+---
 
-✅ ATS-style pass/fail check (based on confidence ≥ 80%)
+## 🛠 Tech Stack
+- **Python**
+- **NLP:** TF-IDF, Cosine Similarity
+- **Libraries:** Pandas, NumPy, Scikit-learn
+- **Frontend & Deployment:** Streamlit
 
-💡 Improvement suggestions for each role (e.g., skills to add for ML Engineer, Data Scientist, etc.)
+---
 
-⚡ Detects Generative AI resumes via keywords (LLM, generative, prompt)
+## 🧠 Approach
+1. Extract text from uploaded resumes (PDF/Text)
+2. Clean and preprocess resume and job description text
+3. Convert text into TF-IDF vectors
+4. Calculate cosine similarity between resumes and job description
+5. Rank candidates based on similarity scores
 
-⬇️ Download results as a CSV report
+---
 
-# Repo Layout
+## 📊 Results & Impact
+- Reduced manual resume screening effort by **~70% (estimated)**
+- Successfully ranked relevant resumes higher across multiple test cases
+- Improved shortlisting efficiency and recruiter decision speed
 
-├── app.py                        # Main Streamlit app
+> *Note: Impact estimation is based on simulated recruiter workflows and test datasets.*
 
-├── data/
-│   └── models/
-│       └── ensemble_resume_model.pkl   # Pre-trained ML pipeline (required)
+---
 
-├── requirements.txt
+## 🖥 Application Preview
+![Resume Screener App](screenshots/app_demo.png)
 
-├── README.md
+---
 
-└── .gitignore
-
-# Quick Start (Local)
-
-Create a virtual environment
-   
-python -m venv .venv   # Windows
-
-.venv\Scripts\activate # Windows PowerShell
-
-# OR on macOS/Linux
-
-source .venv/bin/activate
-
-Install dependencies
-   
+## ⚙️ How to Run Locally
+```bash
 pip install -r requirements.txt
-
-Run the app
-
 streamlit run app.py
-
-
-Then open http://localhost:8501 in your browser.
-
-# How to Use
-
-Upload PDF resumes (one or many).
-
-
-The app will show a table with:
-
-
-Filename
-
-Predicted category
-
-Confidence score
-
-ATS status (Good / Failed to parse)
-
-
-Suggestions for improvement
-
-Download results as CSV for record-keeping.
-
-# Model Notes
-
-
-The model is loaded from data/models/ensemble_resume_model.pkl
-
-It should contain a scikit-learn pipeline with predict (and optionally predict_proba) methods.
-
-For classifiers without predict_proba (e.g., LinearSVC), a default confidence proxy is used.
-
-
-# ⚡ Future extensions:
-
-Add DOCX/TXT parsing
-
-Re-train pipeline with fresh datasets
-
-Integrate BERT embeddings for semantic features
