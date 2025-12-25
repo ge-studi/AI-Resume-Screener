@@ -55,13 +55,66 @@ The system helps recruiters quickly identify the most relevant candidates, signi
 
 ## 🖥 Application Preview
 ![Resume Screener App](screenshots/app_demo1.png)
-![Resume Screener App](screenshots/app_demo2.png)
-![Resume Screener App](screenshots/app_demo3.png)
+
+![Resume Screener App](screenshots/app-demo2.png)
+
+![Resume Screener App](screenshots/app-demo3.png)
 
 ---
 
 ## ⚙️ How to Run Locally
 ```bash
 pip install -r requirements.txt
-streamlit run app.py
+streamlit run resume_screener.py
+```
+
+## 📂 Project Structure
+```
+├── resume_screener.py
+├── venv
+├── requirements.txt
+├── README.md
+├── data/models
+│   └── ensemble_resume_model.pkl
+├── architecture.png
+├── generate_dataset.py
+├── non_overfitting_resumes.csv
+├── screenshots/
+│   └── app_demo1.png
+│   └── app-demo2.png
+│   └── app-demo3.png
+```
+🔮 Future Improvements
+
+Skill extraction using Named Entity Recognition (NER)
+
+Support for multiple job roles and departments
+
+Resume score explainability for recruiters
+
+---
+
+
+## 🎯 Why This Project Matters
+
+This project demonstrates:
+
+Applied NLP and machine learning skills
+
+End-to-end project development and deployment
+
+Ability to solve real-world hiring problems using data
+
+Strong Python and problem-solving fundamentals
+---
+
+## 👤 Author
+
+Geetanjali Singh
+B.Tech (IT) | 2024 Graduate
+
+
+
+
+
 
